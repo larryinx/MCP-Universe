@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
+"""
+Environment preparation script for RLS Business Access task.
+
+This script sets up a PostgreSQL environment with Row Level Security (RLS)
+policies for a social media platform scenario.
+"""
 
 import os
+import sys
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-import sys
 
 def setup_rls_environment():
     """
@@ -206,8 +212,8 @@ def setup_rls_environment():
         cur.close()
         conn.close()
 
-    except Exception as e:
-        print(f"Error setting up environment: {e}")
+    except psycopg2.Error as db_error:
+        print(f"Error setting up environment: {db_error}")
         sys.exit(1)
 
 

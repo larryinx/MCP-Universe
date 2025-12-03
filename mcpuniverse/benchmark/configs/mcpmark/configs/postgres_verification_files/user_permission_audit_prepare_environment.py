@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
+"""
+Environment preparation script for User Permission Audit task.
+
+This script sets up a PostgreSQL environment with business tables and users
+with various permissions for security audit testing.
+"""
 
 import os
+import sys
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
-import sys
 
 # Configuration for users and their permissions
 USER_CONFIGS = {
@@ -308,7 +314,7 @@ def create_business_tables(cur):
         """)
     ]
 
-    for table_name, sql in tables:
+    for _, sql in tables:
         cur.execute(sql)
 
 def create_users(cur):
@@ -365,32 +371,41 @@ def setup_security_environment():
         cur_postgres = conn_postgres.cursor()
 
         current_db = db_params['database']
-        cur_postgres.execute("SELECT datname FROM pg_database WHERE datname LIKE %s AND datname != %s;", ('%user_permission_audit%', current_db))
+        cur_postgres.execute(
+            "SELECT datname FROM pg_database WHERE datname LIKE %s AND datname != %s;",
+            ('%user_permission_audit%', current_db)
+        )
         audit_databases = cur_postgres.fetchall()
 
         if audit_databases:
             for db_row in audit_databases:
                 db_name = db_row[0]
                 try:
-                    cur_postgres.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = %s;", (db_name,))
+                    cur_postgres.execute(
+                        "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = %s;",
+                        (db_name,)
+                    )
                     cur_postgres.execute(f"DROP DATABASE IF EXISTS {db_name};")
                     print(f"Dropped database: {db_name}")
-                except Exception as e:
-                    print(f"Warning: Could not drop database {db_name}: {e}")
+                except psycopg2.Error as db_error:
+                    print(f"Warning: Could not drop database {db_name}: {db_error}")
 
         # Clean up existing users
-        for username in USER_CONFIGS.keys():
+        for username in USER_CONFIGS:
             try:
-                cur_postgres.execute("SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = %s;", (username,))
+                cur_postgres.execute(
+                    "SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE usename = %s;",
+                    (username,)
+                )
                 cur_postgres.execute(f"DROP USER IF EXISTS {username};")
-            except Exception as e:
-                print(f"Warning: Could not drop user {username}: {e}")
+            except psycopg2.Error as db_error:
+                print(f"Warning: Could not drop user {username}: {db_error}")
 
         cur_postgres.close()
         conn_postgres.close()
 
-    except Exception as e:
-        print(f"Warning: Could not clean up users: {e}")
+    except psycopg2.Error as db_error:
+        print(f"Warning: Could not clean up users: {db_error}")
 
     try:
         conn = psycopg2.connect(**db_params)
@@ -426,8 +441,8 @@ def setup_security_environment():
         cur.close()
         conn.close()
 
-    except Exception as e:
-        print(f"Error setting up environment: {e}")
+    except psycopg2.Error as db_error:
+        print(f"Error setting up environment: {db_error}")
         sys.exit(1)
 
 

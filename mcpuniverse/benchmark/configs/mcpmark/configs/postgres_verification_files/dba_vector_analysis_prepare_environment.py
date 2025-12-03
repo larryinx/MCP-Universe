@@ -12,7 +12,7 @@ from pathlib import Path
 # In the new structure, vectors_setup.py is in the same directory
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from vectors_setup import prepare_vector_environment
+from vectors_setup import prepare_vector_environment  # noqa: E402  # pylint: disable=wrong-import-position
 
 logger = logging.getLogger(__name__)
 
