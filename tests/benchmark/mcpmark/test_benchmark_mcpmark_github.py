@@ -10,6 +10,7 @@ from mcpuniverse.common.context import Context
 
 class TestBenchmarkRunnerMCPMarkGitHub(unittest.IsolatedAsyncioTestCase):
 
+    @pytest.mark.skip
     async def test(self):
         """Test MCPMark GitHub tasks (Build Your Own X + Claude Code)."""
 

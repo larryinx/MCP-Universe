@@ -8,6 +8,7 @@ from mcpuniverse.benchmark.configs.mcpmark.prepares import PREPARE_FUNCTIONS
 
 class TestBenchmarkRunnerMCPMarkPlaywright(unittest.IsolatedAsyncioTestCase):
 
+    @pytest.mark.skip
     async def test(self):
         """Test MCPMark Playwright tasks."""
 

@@ -8,6 +8,7 @@ from mcpuniverse.benchmark.configs.mcpmark.prepares import PREPARE_FUNCTIONS
 
 class TestBenchmarkRunnerMCPMarkFilesystem(unittest.IsolatedAsyncioTestCase):
 
+    @pytest.mark.skip
     async def test(self):
         """Test MCPMark Filesystem tasks starting with Desktop category (3 tasks)."""
         

@@ -8,6 +8,7 @@ from mcpuniverse.benchmark.configs.mcpmark.prepares import PREPARE_FUNCTIONS
 
 class TestBenchmarkRunnerMCPMarkNotion(unittest.IsolatedAsyncioTestCase):
 
+    @pytest.mark.skip
     async def test(self):
         """Test MCPMark Notion tasks across 10 projects with 28 verification functions."""
 

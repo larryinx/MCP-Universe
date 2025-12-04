@@ -13,7 +13,7 @@ class TestFunctionsMCPMarkPostgres(unittest.IsolatedAsyncioTestCase):
         self.folder = os.path.dirname(os.path.realpath(__file__))
         self.config_folder = os.path.join(
             self.folder,
-            "../../mcpuniverse/benchmark/configs/test/mcpmark/postgres"
+            "../../mcpuniverse/benchmark/configs/mcpmark/configs/postgres"
         )
 
     # Chinook category tests
