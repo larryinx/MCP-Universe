@@ -13,7 +13,7 @@ class TestFunctionsMCPMarkGitHub(unittest.IsolatedAsyncioTestCase):
         self.folder = os.path.dirname(os.path.realpath(__file__))
         self.config_folder = os.path.join(
             self.folder,
-            "../../mcpuniverse/benchmark/configs/test/mcpmark/github"
+            "../../mcpuniverse/benchmark/configs/mcpmark/configs/github"
         )
 
     # Build Your Own X category tests

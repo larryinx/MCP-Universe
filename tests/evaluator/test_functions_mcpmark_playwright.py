@@ -13,11 +13,11 @@ class TestFunctionsMCPMarkPlaywright(unittest.IsolatedAsyncioTestCase):
         self.folder = os.path.dirname(os.path.realpath(__file__))
         self.config_folder_playwright = os.path.join(
             self.folder,
-            "../../mcpuniverse/benchmark/configs/test/mcpmark/playwright"
+            "../../mcpuniverse/benchmark/configs/mcpmark/configs/playwright"
         )
         self.config_folder_webarena = os.path.join(
             self.folder,
-            "../../mcpuniverse/benchmark/configs/test/mcpmark/playwright_webarena"
+            "../../mcpuniverse/benchmark/configs/mcpmark/configs/playwright_webarena"
         )
 
     # Playwright category tests

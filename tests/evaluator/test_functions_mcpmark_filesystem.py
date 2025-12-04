@@ -13,7 +13,7 @@ class TestFunctionsMCPMarkFilesystem(unittest.IsolatedAsyncioTestCase):
         self.folder = os.path.dirname(os.path.realpath(__file__))
         self.config_folder = os.path.join(
             self.folder,
-            "../../mcpuniverse/benchmark/configs/test/mcpmark/filesystem"
+            "../../mcpuniverse/benchmark/configs/mcpmark/configs/filesystem"
         )
 
     # Desktop category tests
