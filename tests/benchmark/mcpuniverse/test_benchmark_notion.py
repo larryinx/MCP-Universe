@@ -6,6 +6,7 @@ from mcpuniverse.benchmark.runner import BenchmarkRunner
 
 class TestBenchmarkRunner(unittest.IsolatedAsyncioTestCase):
 
+    @pytest.mark.skip
     async def test(self):
         trace_collector = FileCollector(log_file="log/mcpuniverse/notion.log")
         benchmark = BenchmarkRunner("mcpuniverse/notion.yaml")

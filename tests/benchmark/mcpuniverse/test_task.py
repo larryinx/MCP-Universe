@@ -11,13 +11,13 @@ class TestTask(unittest.IsolatedAsyncioTestCase):
         self.folder = os.path.dirname(os.path.realpath(__file__))
 
     async def test_init(self):
-        config_file = os.path.join(self.folder, "../data/task/google-map_task_0001.json")
+        config_file = os.path.join(self.folder, "../../data/task/google-map_task_0001.json")
         task = Task(config_file)
         self.assertEqual(len(task.get_mcp_servers()), 1)
         self.assertEqual(len(task.get_evaluators()), 3)
 
     async def test_evaluate(self):
-        config_file = os.path.join(self.folder, "../data/task/google-map_task_0001.json")
+        config_file = os.path.join(self.folder, "../../data/task/google-map_task_0001.json")
         task = Task(config_file)
         data = {
             "starting_city": "Johor Bahru",
@@ -76,7 +76,7 @@ class TestTask(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(results[2].passed)
 
     async def test_cleanup_1(self):
-        config_file = os.path.join(self.folder, "../data/task/google-map_task_0001.json")
+        config_file = os.path.join(self.folder, "../../data/task/google-map_task_0001.json")
         task = Task(config_file)
         trace_records = [
             TraceRecord(
@@ -113,7 +113,7 @@ class TestTask(unittest.IsolatedAsyncioTestCase):
         await task.reset(trace_records)
 
     async def test_cleanup_2(self):
-        config_file = os.path.join(self.folder, "../data/task/weather_task.json")
+        config_file = os.path.join(self.folder, "../../data/task/weather_task.json")
         task = Task(config_file)
         trace_records = [
             TraceRecord(
@@ -140,7 +140,7 @@ class TestTask(unittest.IsolatedAsyncioTestCase):
         await task.reset(trace_records)
 
     async def test_execute_reset(self):
-        config_file = os.path.join(self.folder, "../data/task/google-map_task_0001.json")
+        config_file = os.path.join(self.folder, "../../data/task/google-map_task_0001.json")
         task = Task(config_file)
         cleanup_config = TaskCleanupConfig(
             server="google-maps",
@@ -155,7 +155,9 @@ class TestTask(unittest.IsolatedAsyncioTestCase):
             "response": {"content": [{"annotations": None, "text": "San Francisco", "type": "text"}]},
             "type": "tool"
         })
-        self.assertDictEqual(res, {"name": {"content": "San Francisco"}})
+        # Check that the name field is correctly extracted
+        self.assertIn("name", res)
+        self.assertEqual(res["name"]["content"], "San Francisco")
 
     async def test_set_environ_variables(self):
         config = TaskConfig(

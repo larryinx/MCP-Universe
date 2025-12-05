@@ -9,7 +9,7 @@ class TestFunctionsExtra(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         self.folder = os.path.dirname(os.path.realpath(__file__))
-        self.config_folder = os.path.join(self.folder, "../../mcpuniverse/benchmark/configs/test/multi_server")
+        self.config_folder = os.path.join(self.folder, "../../mcpuniverse/benchmark/configs/mcpuniverse/multi_server")
 
     @pytest.mark.skip
     async def test_task_0005(self):

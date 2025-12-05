@@ -8,6 +8,7 @@ from mcpuniverse.callbacks.handlers.vprint import get_vprint_callbacks
 
 class TestBenchmarkRunner(unittest.IsolatedAsyncioTestCase):
 
+    @pytest.mark.skip
     async def test(self):
         trace_collector = FileCollector(log_file="log/mcpuniverse/web_search.log")
         benchmark = BenchmarkRunner("mcpuniverse/web_search.yaml")

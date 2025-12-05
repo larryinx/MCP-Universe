@@ -9,11 +9,11 @@ class TestFunctionsExtra(unittest.IsolatedAsyncioTestCase):
 
     def setUp(self):
         self.folder = os.path.dirname(os.path.realpath(__file__))
-        self.config_folder = os.path.join(self.folder, "../../mcpuniverse/benchmark/configs/test/github")
+        self.config_folder = os.path.join(self.folder, "../../mcpuniverse/benchmark/configs/mcpuniverse/repository_management")
 
     @pytest.mark.skip
     async def test_task_0001(self):
-        config_file = os.path.join(self.config_folder, "github_task_0001_test.json")
+        config_file = os.path.join(self.config_folder, "github_task_0001.json")
         task = Task(config_file)
         print(task.get_evaluators())
 
