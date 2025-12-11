@@ -232,6 +232,10 @@ class BenchmarkRunner(metaclass=AutodocABCMeta):
                     # Execute the task and the corresponding evaluations
                     task = Task(task_filepath, context=self._context)
 
+                    # Log FILESYSTEM_TEST_DIR before prepare (after previous task cleanup)
+                    filesystem_test_dir = os.environ.get("FILESYSTEM_TEST_DIR", "NOT SET")
+                    self._logger.info("FILESYSTEM_TEST_DIR before prepare: %s", filesystem_test_dir)
+
                     # Prepare task environment before agent execution
                     try:
                         self._logger.info("Preparing task environment for: %s", task_path)

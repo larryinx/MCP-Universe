@@ -600,17 +600,44 @@ async def mcpmark_filesystem_setup(
             test_root=Path(test_root) if test_root else None
         )
 
+        # Log task information before setup
+        task_info = (
+            f"service={mock_task.service}, category_id={mock_task.category_id}, "
+            f"task_id={mock_task.task_id}, name={mock_task.name}"
+        )
+        logger.info("Preparing filesystem setup for task: %s", task_info)
+
         # Call setup in a separate thread (though filesystem doesn't use async, being consistent)
         success = await asyncio.to_thread(state_manager.set_up, mock_task)
 
         if success:
-            # Store state manager in context for cleanup
-            if context:
-                context.env["MCPMARK_FILESYSTEM_STATE_MANAGER"] = state_manager
-                context.env["MCPMARK_FILESYSTEM_TASK"] = mock_task
-                # Store the test directory for potential use by evaluators
-                if hasattr(mock_task, 'test_directory') and mock_task.test_directory:
-                    context.env["MCPMARK_FILESYSTEM_TEST_DIR"] = mock_task.test_directory
+            # Get the test directory directly from state manager after setup
+            # This ensures we get the actual path that was set during set_up()
+            test_directory = state_manager.get_test_directory()
+
+            # Log environment variable after set_up() in subthread
+            filesystem_test_dir_after_setup = os.environ.get("FILESYSTEM_TEST_DIR", "NOT SET")
+            logger.info(
+                "FILESYSTEM_TEST_DIR after set_up() in subthread: %s",
+                filesystem_test_dir_after_setup
+            )
+            logger.info("test_directory from state_manager.get_test_directory(): %s", test_directory)
+
+            if test_directory:
+                test_directory_str = str(test_directory)
+                # Store state manager in context for cleanup
+                if context:
+                    context.env["MCPMARK_FILESYSTEM_STATE_MANAGER"] = state_manager
+                    context.env["MCPMARK_FILESYSTEM_TASK"] = mock_task
+                    context.env["MCPMARK_FILESYSTEM_TEST_DIR"] = test_directory_str
+
+                # Explicitly set environment variable in main thread after set_up() completes
+                # This is critical because build_client() reads from os.environ when rendering templates
+                # We set it here in the main thread to ensure synchronization
+                os.environ["FILESYSTEM_TEST_DIR"] = test_directory_str
+                logger.info("FILESYSTEM_TEST_DIR set in main thread after prepare: %s", test_directory_str)
+            else:
+                logger.warning("No test directory returned from state manager after setup")
 
             logger.info("Filesystem environment setup completed for task: %s", mock_task.name)
             return f"Filesystem environment setup completed for task: {mock_task.name}"

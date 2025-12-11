@@ -4,6 +4,8 @@ Cleanup functions for tasks.
 import asyncio
 import random
 import logging
+import shutil
+import pathlib
 from typing import Callable
 
 import os
@@ -267,14 +269,61 @@ async def mcpmark_filesystem_cleanup(context: Context = None, **_kwargs):
             logger.warning("No task object found in context")
             return "No task object to cleanup"
 
+        # Get backup directory path before cleanup (in case clean_up() doesn't handle it)
+        backup_dir_path = None
+        if hasattr(state_manager, 'backup_dir') and state_manager.backup_dir:
+            backup_dir_path = state_manager.backup_dir
+        elif hasattr(state_manager, 'current_task_dir') and state_manager.current_task_dir:
+            backup_dir_path = state_manager.current_task_dir
+        elif hasattr(task, 'test_directory') and task.test_directory:
+            backup_dir_path = pathlib.Path(task.test_directory)
+
+        # Log backup directory path before cleanup
+        if backup_dir_path:
+            logger.info("Backup directory to clean up: %s", backup_dir_path)
+            # Check if directory exists
+            if hasattr(backup_dir_path, 'exists') and backup_dir_path.exists():
+                logger.info("Backup directory exists: %s", backup_dir_path)
+            else:
+                logger.warning("Backup directory does not exist: %s", backup_dir_path)
+
         # Call cleanup in a separate thread for consistency
         logger.info("Cleaning up Filesystem environment for task: %s", task.name)
         success = await asyncio.to_thread(state_manager.clean_up, task)
+
+        # Verify backup directory was actually deleted
+        if backup_dir_path:
+            if isinstance(backup_dir_path, str):
+                backup_dir_path = pathlib.Path(backup_dir_path)
+            if backup_dir_path.exists():
+                logger.warning(
+                    "Backup directory still exists after cleanup: %s. Attempting manual removal.",
+                    backup_dir_path
+                )
+                try:
+                    shutil.rmtree(backup_dir_path)
+                    logger.info("Successfully removed backup directory: %s", backup_dir_path)
+                except (OSError, PermissionError, FileNotFoundError) as e:
+                    logger.error("Failed to manually remove backup directory %s: %s", backup_dir_path, e)
+                    success = False
+            else:
+                logger.info("Backup directory successfully removed: %s", backup_dir_path)
 
         # Clear from context
         context.env.pop("MCPMARK_FILESYSTEM_STATE_MANAGER", None)
         context.env.pop("MCPMARK_FILESYSTEM_TASK", None)
         context.env.pop("MCPMARK_FILESYSTEM_TEST_DIR", None)
+
+        # Log FILESYSTEM_TEST_DIR before cleanup
+        filesystem_test_dir_before = os.environ.get("FILESYSTEM_TEST_DIR", "NOT SET")
+        logger.info("FILESYSTEM_TEST_DIR before cleanup: %s", filesystem_test_dir_before)
+
+        # Clear environment variable to prevent pollution between tasks
+        os.environ.pop("FILESYSTEM_TEST_DIR", None)
+
+        # Log FILESYSTEM_TEST_DIR after cleanup
+        filesystem_test_dir_after = os.environ.get("FILESYSTEM_TEST_DIR", "NOT SET")
+        logger.info("FILESYSTEM_TEST_DIR after cleanup: %s", filesystem_test_dir_after)
 
         if success:
             logger.info("Filesystem environment cleanup completed successfully")
