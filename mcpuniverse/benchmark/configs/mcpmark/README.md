@@ -445,7 +445,65 @@ docker run -d \
 
 ---
 
-#### 3 · Container Management
+#### 3 · Import Sample Databases
+
+MCPMark's PostgreSQL tasks rely on several pre-populated sample databases (`employees`, `chinook`, `dvdrental`, `sports`, `lego`).  
+You must first download the official backup files into `third_party/mcpmark/postgres_state/` in this repository and restore them as standalone databases.
+
+
+##### 3.1 Download database backups
+
+From the `MCP-Universe` project root:
+
+```bash
+mkdir -p third_party/mcpmark/postgres_state
+cd third_party/mcpmark/postgres_state
+
+# Download all database backups
+wget https://storage.mcpmark.ai/postgres/employees.backup
+wget https://storage.mcpmark.ai/postgres/chinook.backup
+wget https://storage.mcpmark.ai/postgres/dvdrental.backup
+wget https://storage.mcpmark.ai/postgres/sports.backup
+wget https://storage.mcpmark.ai/postgres/lego.backup
+
+cd ../../../..
+```
+
+##### 3.2 Create databases and restore from backups
+
+Make sure the mcpmark-postgres Docker container is running, then run:
+
+```bash
+export PGPASSWORD=mysecretpassword
+
+# Create and restore each database
+createdb -h localhost -U postgres employees
+pg_restore -h localhost -U postgres -d employees -v third_party/mcpmark/postgres_state/employees.backup
+
+createdb -h localhost -U postgres chinook
+pg_restore -h localhost -U postgres -d chinook -v third_party/mcpmark/postgres_state/chinook.backup
+
+createdb -h localhost -U postgres dvdrental
+pg_restore -h localhost -U postgres -d dvdrental -v third_party/mcpmark/postgres_state/dvdrental.backup
+
+createdb -h localhost -U postgres sports
+pg_restore -h localhost -U postgres -d sports -v third_party/mcpmark/postgres_state/sports.backup
+
+createdb -h localhost -U postgres lego
+pg_restore -h localhost -U postgres -d lego -v third_party/mcpmark/postgres_state/lego.backup
+```
+
+##### 3.3 Verify databases were imported correctly
+
+```bash
+PGPASSWORD=mysecretpassword psql -h localhost -U postgres -c "\l"
+```
+
+You should see employees, chinook, dvdrental, sports, and lego listed in the databases.
+
+---
+
+#### 4 · Container Management
 
 ##### View Logs
 ```bash

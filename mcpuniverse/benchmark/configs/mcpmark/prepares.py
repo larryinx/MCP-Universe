@@ -383,6 +383,12 @@ async def mcpmark_github_setup(
         **kwargs: Additional arguments from prepare_args
     """
     try:
+        # Debug: show initial POSTGRES_ADDRESS before any setup
+        print(
+            "[DEBUG] mcpmark_postgres_setup(start): POSTGRES_ADDRESS =",
+            os.environ.get("POSTGRES_ADDRESS"),
+        )
+
         # Add mcpmark to path
         _add_mcpmark_to_path()
 
@@ -897,7 +903,7 @@ async def mcpmark_postgres_setup(
 
                 # Set environment variables for MCP server and evaluators
                 if hasattr(mock_task, 'database_name') and mock_task.database_name:
-                    # Update POSTGRES_DATABASE for MCP server
+                    # Update POSTGRES_DATABASE for evaluators
                     context.env["POSTGRES_DATABASE"] = mock_task.database_name
                     os.environ["POSTGRES_DATABASE"] = mock_task.database_name
                     logger.info(
@@ -906,9 +912,35 @@ async def mcpmark_postgres_setup(
                     )
 
                     # Also set database URL for convenience
-                    if hasattr(mock_task, 'database_url'):
+                    if hasattr(mock_task, 'database_url') and mock_task.database_url:
                         context.env["POSTGRES_DATABASE_URL"] = mock_task.database_url
                         os.environ["POSTGRES_DATABASE_URL"] = mock_task.database_url
+
+                    # Ensure POSTGRES_ADDRESS points to the same task database
+                    # This is used by mcpuniverse's `postgres` / `postgres-pro` servers
+                    # via `server_list.json` with template `{{POSTGRES_ADDRESS}}`.
+                    #
+                    # Prefer the full URL from state manager if available; otherwise,
+                    # construct it from host/port/username/password + database name.
+                    if mock_task.database_url:
+                        postgres_address = mock_task.database_url
+                    else:
+                        if postgres_password:
+                            auth = f"{postgres_username}:{postgres_password}"
+                        else:
+                            auth = postgres_username
+                        postgres_address = (
+                            f"postgresql://{auth}@{postgres_host}:{postgres_port}/{mock_task.database_name}"
+                        )
+
+                    context.env["POSTGRES_ADDRESS"] = postgres_address
+                    os.environ["POSTGRES_ADDRESS"] = postgres_address
+                    logger.info("Set POSTGRES_ADDRESS to: %s", postgres_address)
+                    # Debug: show POSTGRES_ADDRESS after setup
+                    print(
+                        "[DEBUG] mcpmark_postgres_setup(end): POSTGRES_ADDRESS =",
+                        os.environ.get("POSTGRES_ADDRESS"),
+                    )
 
             logger.info(
                 "Postgres environment setup completed for task: %s",
