@@ -12,7 +12,11 @@ import asyncio
 from pathlib import Path
 from typing import Callable
 
+from dotenv import load_dotenv
 from mcpuniverse.common.context import Context
+
+# Ensure .env (project root) is loaded so POSTGRES_* etc. are available
+load_dotenv()
 
 PREPARE_FUNCTIONS = {}
 
@@ -859,10 +863,11 @@ async def mcpmark_postgres_setup(
         )
 
         # Get Postgres connection parameters from environment
+        # Fall back to MCPMark's default password if not explicitly set.
         postgres_host = os.environ.get("POSTGRES_HOST", "localhost")
         postgres_port = int(os.environ.get("POSTGRES_PORT", "5432"))
         postgres_username = os.environ.get("POSTGRES_USERNAME", "postgres")
-        postgres_password = os.environ.get("POSTGRES_PASSWORD", "")
+        postgres_password = os.environ.get("POSTGRES_PASSWORD") or "password"
 
         # Create a mock task object with proper attributes
         class MockTask:  # pylint: disable=too-few-public-methods
@@ -876,7 +881,29 @@ async def mcpmark_postgres_setup(
                 # Postgres-specific attributes
                 self.database_name = None
                 self.database_url = None
-                self.task_instruction_path = Path(".")  # Dummy path for prepare_environment.py
+                # For most categories we don't rely on prepare_environment.py,
+                # but for `vectors` we need to run the original mcpmark
+                # vector setup script to create pgvector extension and tables.
+                if category_id == "vectors":
+                    # Point to the original mcpmark vectors task directory which
+                    # contains its own prepare_environment.py script.
+                    # This allows PostgresStateManager._run_prepare_environment()
+                    # to locate and execute it correctly.
+                    repo_root = Path(__file__).resolve().parents[4]  # .../MCP-Universe
+                    self.task_instruction_path = (
+                        repo_root
+                        / "third_party"
+                        / "mcpmark"
+                        / "tasks"
+                        / "postgres"
+                        / "standard"
+                        / "vectors"
+                        / "dba_vector_analysis"
+                        / "description.md"
+                    )
+                else:
+                    # For non-vector tasks we don't need task-specific prepare script
+                    self.task_instruction_path = Path(".")
 
         # Generate a unique task ID based on category and timestamp
         task_id = f"task_{int(time.time())}"
@@ -911,27 +938,24 @@ async def mcpmark_postgres_setup(
                         mock_task.database_name
                     )
 
-                    # Also set database URL for convenience
+                    # Also set database URL for convenience (without password)
                     if hasattr(mock_task, 'database_url') and mock_task.database_url:
                         context.env["POSTGRES_DATABASE_URL"] = mock_task.database_url
                         os.environ["POSTGRES_DATABASE_URL"] = mock_task.database_url
 
-                    # Ensure POSTGRES_ADDRESS points to the same task database
+                    # Ensure POSTGRES_ADDRESS points to the same task database.
                     # This is used by mcpuniverse's `postgres` / `postgres-pro` servers
                     # via `server_list.json` with template `{{POSTGRES_ADDRESS}}`.
                     #
-                    # Prefer the full URL from state manager if available; otherwise,
-                    # construct it from host/port/username/password + database name.
-                    if mock_task.database_url:
-                        postgres_address = mock_task.database_url
+                    # Always construct it from host/port/username/password + database name
+                    # so that the MCP server has proper credentials.
+                    if postgres_password:
+                        auth = f"{postgres_username}:{postgres_password}"
                     else:
-                        if postgres_password:
-                            auth = f"{postgres_username}:{postgres_password}"
-                        else:
-                            auth = postgres_username
-                        postgres_address = (
-                            f"postgresql://{auth}@{postgres_host}:{postgres_port}/{mock_task.database_name}"
-                        )
+                        auth = postgres_username
+                    postgres_address = (
+                        f"postgresql://{auth}@{postgres_host}:{postgres_port}/{mock_task.database_name}"
+                    )
 
                     context.env["POSTGRES_ADDRESS"] = postgres_address
                     os.environ["POSTGRES_ADDRESS"] = postgres_address
