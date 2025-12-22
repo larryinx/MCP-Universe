@@ -1,6 +1,12 @@
 {
     "category": "blender",
     "question": "Clear the current Blender scene and remove all PolyHaven materials.\nSet the output file format to OpenEXR MultiLayer. Use DWAA (lossy) compression with a DWA compression level of 3.0. Ensure the color depth is set to 'Float (Half)'. In Color Management, change the View Transform to 'Filmic' and the Look to 'Medium High Contrast'. Add a metadata note to the render output containing the text 'Benchmark Test Run'. After finishing all tasks, create a new file and save it as 'tid_13.blend' in the '{{MCPUniverse_DIR}}/mcpuniverse/evaluator/blender/blend_files'.",
+    "use_specified_server": true,
+    "mcp_servers": [
+        {
+            "name": "blender"
+        }
+    ],
     "evaluators": [
         {
             "func": "raw",

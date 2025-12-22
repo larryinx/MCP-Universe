@@ -4,6 +4,15 @@
     "output_format": {
         "check_buy_sell_hold_signal": "buy/sell/hold"
     },
+    "use_specified_server": true,
+    "mcp_servers": [
+        {
+            "name": "yfinance"
+        },
+        {
+            "name": "calculator"
+        }
+    ],
     "evaluators": [
         {
             "func": "json",

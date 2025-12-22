@@ -5,6 +5,15 @@
         "total value": "[NUMBER]", 
         "total percentage return": "[NUMBER]"
     },
+    "use_specified_server": true,
+    "mcp_servers": [
+        {
+            "name": "yfinance"
+        },
+        {
+            "name": "calculator"
+        }
+    ],
     "evaluators": [
         {
             "func": "json",
