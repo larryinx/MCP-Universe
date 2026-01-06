@@ -1,6 +1,6 @@
 {
     "category": "build_your_own_x",
-    "question": "Find out the specific commit SHA of adding an entry about \"RAG for Document Search\". After finding this information, create an ANSWER.md file in the repository with the content being the commit SHA (e.g., 023dfa35694db2709057488ad338afdbc89fb226).\n\nHint: It should be in an \"AI model\" section I think.",
+    "question": "Please execute the following task in my repository:{{GITHUB_EVAL_ORG}}/build-your-own-x\n Find out the specific commit SHA of adding an entry about \"RAG for Document Search\". After finding this information, create an ANSWER.md file in the repository with the content being the commit SHA (e.g., 023dfa35694db2709057488ad338afdbc89fb226).\n\nHint: It should be in an \"AI model\" section I think.",
     "use_specified_server": true,
     "mcp_servers": [
         {
