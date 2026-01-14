@@ -10,6 +10,15 @@
         }, 
         "company with higher gross profit margin": "[PFE or JNJ]"
     },
+    "use_specified_server": true,
+    "mcp_servers": [
+        {
+            "name": "yfinance"
+        },
+        {
+            "name": "calculator"
+        }
+    ],
     "evaluators": [
         {
             "func": "json",

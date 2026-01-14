@@ -28,9 +28,19 @@ model_name_map = {
     "DeepSeekV3_1_OR": "deepseek/deepseek-chat-v3.1",
     "GLM4_5_OR": "z-ai/glm-4.5",
     "GLM4_5_AIR_OR": "z-ai/glm-4.5-air",
+    "GLM4_6_OR": "z-ai/glm-4.6",
     "KimiK2_OR": "moonshotai/kimi-k2",
     "Qwen3Max_OR": "qwen/qwen3-max",
-    "KimiK2_0905_OR": "moonshotai/kimi-k2-0905"
+    "KimiK2_0905_OR": "moonshotai/kimi-k2-0905",
+    "DeepSeekV3_1_Terminus_OR": "deepseek/deepseek-v3.1-terminus",
+    "DeepSeekV3_2_EXP_OR": "deepseek/deepseek-v3.2-exp",
+    "ClaudeSonnet4_5_OR": "anthropic/claude-sonnet-4.5",
+    "ClaudeHaiku4_5_OR": "anthropic/claude-haiku-4.5",
+    "Ling1T_OR": "inclusionai/ling-1t",
+    "Gemini3ProPreview_OR": "google/gemini-3-pro-preview",
+    "Grok4_1Fast_Thinking_OR": "x-ai/grok-4.1-fast",
+    "GPT5_1_Medium_OR": "openai/gpt-5.1",
+    "GPT5_Medium_OR": "openai/gpt-5"
 }
 
 @dataclass
@@ -49,13 +59,13 @@ class OpenRouterConfig(BaseConfig):
         seed (int): Random seed for reproducibility (default: 12345).
         reasoning (str): Reasoning level (default: "high").
     """
-    model_name: str = "KimiK2_OR"
+    model_name: str = "GPT5_1_OR"
     api_key: str = os.getenv("OPENROUTER_API_KEY", "")
     temperature: float = 1.0
     top_p: float = 1.0
     frequency_penalty: float = 0.0
     presence_penalty: float = 0.0
-    max_completion_tokens: int = 100000
+    max_completion_tokens: int = 20000
     seed: int = 12345
     reasoning: str = "high"
 
@@ -81,7 +91,8 @@ class OpenRouterModel(BaseLLM):
 
     def _get_model_endpoints(self, model_name: str) -> Optional[list[dict]]:
         """
-        Fetches endpoints for the model from OpenRouter, with metadata including provider, quantization, etc.
+        Fetches endpoints for the model from OpenRouter,
+        with metadata including provider, quantization, etc.
         """
         # model_name should be something like "qwen/qwen3-max"
         url = f"https://openrouter.ai/api/v1/models/{model_name}/endpoints"
@@ -130,7 +141,7 @@ class OpenRouterModel(BaseLLM):
             messages: List[dict[str, str]],
             response_format: Type[PydanticBaseModel] = None,
             **kwargs
-    ):  # pylint: disable=too-many-return-statements
+    ):
         """
         Generates content using the OpenRouter model.
 
@@ -173,37 +184,42 @@ class OpenRouterModel(BaseLLM):
 
         for attempt in range(max_retries + 1):
             try:
-                client = OpenAI(api_key=self.config.api_key, base_url="https://openrouter.ai/api/v1")
+                client = OpenAI(
+                    api_key=self.config.api_key,
+                    base_url="https://openrouter.ai/api/v1"
+                )
+                # Prepare common parameters, starting with call_kwargs
+                common_params = {
+                    "messages": messages,
+                    "model": model_name,
+                    "temperature": self.config.temperature,
+                    "timeout": int(kwargs.get("timeout", 60)),
+                    "top_p": self.config.top_p,
+                    "frequency_penalty": self.config.frequency_penalty,
+                    "presence_penalty": self.config.presence_penalty,
+                    "seed": self.config.seed,
+                    "max_completion_tokens": self.config.max_completion_tokens,
+                }
+
+                # Merge call_kwargs into common_params
+                # Handle extra_body specially to merge it properly
+                if "extra_body" in call_kwargs:
+                    common_params.setdefault("extra_body", {}).update(call_kwargs.pop("extra_body"))
+                common_params.update(call_kwargs)
+
+                if self.config.model_name in [
+                    "Grok4_1Fast_Thinking_OR",
+                    "GPT5_1_OR",
+                    "GPT5_Medium_OR"
+                ]:
+                    common_params.setdefault("extra_body", {})["reasoning"] = {
+                        "enabled": True
+                    }
+                    if self.config.model_name in ["GPT5_1_Medium_OR", "GPT5_Medium_OR"]:
+                        common_params["extra_body"]["reasoning"]["effort"] = "medium"
 
                 if response_format is None:
-                    if messages[0]['role']=="raw":
-                        chat = client.completions.create(
-                            model=model_name,
-                            prompt= messages[0]['content'],
-                            temperature=self.config.temperature,
-                            # max_tokens=self.config.max_completion_tokens,
-                            timeout=int(kwargs.get("timeout", 60)),
-                            top_p=self.config.top_p,
-                            frequency_penalty=self.config.frequency_penalty,
-                            presence_penalty=self.config.presence_penalty,
-                            seed=self.config.seed,
-                            **call_kwargs
-                        )
-                        return chat.choices[0].text
-
-                    chat = client.chat.completions.create(
-                        messages=messages,
-                        model=model_name,
-                        temperature=self.config.temperature,
-                        max_tokens=self.config.max_completion_tokens,
-                        timeout=int(kwargs.get("timeout", 60)),
-                        top_p=self.config.top_p,
-                        frequency_penalty=self.config.frequency_penalty,
-                        presence_penalty=self.config.presence_penalty,
-                        seed=self.config.seed,
-                        **kwargs
-                    )
-
+                    chat = client.chat.completions.create(**common_params)
                     # If tools are provided, return the entire response object
                     # so the caller can handle both content and tool_calls
                     if 'tools' in kwargs:
@@ -211,19 +227,11 @@ class OpenRouterModel(BaseLLM):
                     # For backward compatibility, return just content when no tools
                     return chat.choices[0].message.content
 
-                chat = client.beta.chat.completions.parse(
-                    messages=messages,
-                    model=model_name,
-                    temperature=self.config.temperature,
-                    timeout=int(kwargs.get("timeout", 60)),
-                    top_p=self.config.top_p,
-                    frequency_penalty=self.config.frequency_penalty,
-                    presence_penalty=self.config.presence_penalty,
-                    seed=self.config.seed,
-                    response_format=response_format,
-                    max_completion_tokens=self.config.max_completion_tokens,
-                    **kwargs
-                )
+                # Add response_format for structured output
+                parse_params = common_params.copy()
+                parse_params["response_format"] = response_format
+
+                chat = client.beta.chat.completions.parse(**parse_params)
                 # If tools are provided, return the entire response object
                 # so the caller can handle both content and tool_calls
                 if 'tools' in kwargs:

@@ -6,6 +6,15 @@
         "7-day percentage change": "[NUMBER]", 
         "30-day percentage change": "[NUMBER]"
     },
+    "use_specified_server": true,
+    "mcp_servers": [
+        {
+            "name": "yfinance"
+        },
+        {
+            "name": "calculator"
+        }
+    ],
     "evaluators": [
         {
             "func": "json",

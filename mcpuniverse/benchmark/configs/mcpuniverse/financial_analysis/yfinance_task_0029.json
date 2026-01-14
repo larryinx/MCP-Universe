@@ -5,6 +5,15 @@
         "date": "2024-05-28/2024-05-29/2024-05-30/2024-05-31",
         "earn": "[NUMBER] (do not include the dollar sign, only the number)"
     },
+    "use_specified_server": true,
+    "mcp_servers": [
+        {
+            "name": "yfinance"
+        },
+        {
+            "name": "calculator"
+        }
+    ],
     "evaluators": [
         {
             "func": "json",

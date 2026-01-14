@@ -4,6 +4,15 @@
     "output_format": {
         "tickers": ["ticker1"]
     },
+    "use_specified_server": true,
+    "mcp_servers": [
+        {
+            "name": "yfinance"
+        },
+        {
+            "name": "calculator"
+        }
+    ],
     "evaluators": [
         {
             "func": "json",

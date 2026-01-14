@@ -10,6 +10,15 @@
         }, 
         "company with higher R&D expense percentage": "[INTC or AMD]"
     },
+    "use_specified_server": true,
+    "mcp_servers": [
+        {
+            "name": "yfinance"
+        },
+        {
+            "name": "calculator"
+        }
+    ],
     "evaluators": [
         {
             "func": "json",

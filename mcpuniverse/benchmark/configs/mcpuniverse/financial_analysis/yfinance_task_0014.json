@@ -17,6 +17,15 @@
         "company with largest positive increase in Blackrock Inc.'s reported stake": "[MSFT or AAPL or GOOGL]", 
         "company with largest positive increase in Vanguard Group's reported stake": "[MSFT or AAPL or GOOGL]"
     },
+    "use_specified_server": true,
+    "mcp_servers": [
+        {
+            "name": "yfinance"
+        },
+        {
+            "name": "calculator"
+        }
+    ],
     "evaluators": [
         {
             "func": "json",
