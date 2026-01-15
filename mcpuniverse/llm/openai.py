@@ -27,6 +27,7 @@ class OpenAIConfig(BaseConfig):
     Attributes:
         model_name (str): The name of the OpenAI model to use (default: "gpt-4o").
         api_key (str): The OpenAI API key (default: environment variable OPENAI_API_KEY).
+        base_url (str): Custom base URL for OpenAI-compatible APIs (e.g., vLLM).
         temperature (float): Controls randomness in output (default: 1.0).
         top_p (float): Controls diversity of output (default: 1.0).
         frequency_penalty (float): Penalizes frequent token use (default: 0.0).
@@ -37,6 +38,7 @@ class OpenAIConfig(BaseConfig):
     """
     model_name: str = "gpt-4.1"
     api_key: str = os.getenv("OPENAI_API_KEY", "")
+    base_url: str = os.getenv("OPENAI_BASE_URL", "")
     temperature: float = 1.0
     top_p: float = 1.0
     frequency_penalty: float = 0.0
@@ -96,7 +98,11 @@ class OpenAIModel(BaseLLM):
 
         for attempt in range(max_retries + 1):
             try:
-                client = OpenAI(api_key=self.config.api_key)
+                # Support custom base_url for OpenAI-compatible APIs (e.g., vLLM)
+                client_kwargs = {"api_key": self.config.api_key}
+                if self.config.base_url:
+                    client_kwargs["base_url"] = self.config.base_url
+                client = OpenAI(**client_kwargs)
                 # Models support the 'reasoning_effort' parameter.
                 # This set can be extended as new models are introduced.
                 _models_with_reasoning_effort_support = {"gpt-5", "o3", "o4-mini", "gpt-5-high"}
@@ -171,3 +177,4 @@ class OpenAIModel(BaseLLM):
         """
         super().set_context(context)
         self.config.api_key = context.env.get("OPENAI_API_KEY", self.config.api_key)
+        self.config.base_url = context.env.get("OPENAI_BASE_URL", self.config.base_url)

@@ -1,0 +1,32 @@
+kind: llm
+spec:
+  name: llm-1
+  type: openai
+  config:
+    model_name: functiongemma-270m-it
+    base_url: http://localhost:8008/v1
+    api_key: token-abc123
+    max_completion_tokens: 2048
+    temperature: 0.7
+
+---
+kind: agent
+spec:
+  name: ReAct-agent
+  type: react
+  config:
+    llm: llm-1
+    instruction: You are an agent for filesystem operations and file management tasks.
+    max_iterations: 20
+    summarize_tool_response: false
+
+---
+kind: benchmark
+spec:
+  description: Benchmark for mcpmark Filesystem tasks with vLLM functiongemma-270m-it model.
+  agent: ReAct-agent
+  tasks:
+    # Start with simpler File Context tasks for testing
+    - mcpmark/configs/filesystem/file_context/uppercase.json
+    - mcpmark/configs/filesystem/file_context/pattern_matching.json
+    - mcpmark/configs/filesystem/file_context/file_merging.json
